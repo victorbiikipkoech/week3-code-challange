@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Movie Theater</title>
+    <style>
+        /* Add your CSS styles here */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-sidebar">
+            <h3>Movie Menu</h3>
+            <ul id="films">
+                <!-- JavaScript will populate this list -->
+            </ul>
+        </div>
+        <div class="movie-details">
+            <h1>Movie Details</h1>
+            <img id="movie-poster" src="" alt="Movie Poster">
+            <h2 id="movie-title"></h2>
+            <p id="movie-runtime"></p>
+            <p id="movie-showtime"></p>
+            <p id="available-tickets"></p>
+            <p id="movie-description"></p>
+            <button id="buy-ticket">Buy Ticket</button>
+        </div>
+    </div>
+
+    <script>
+        // Define variables for movie data and available tickets
+        let movies;
+        let availableTickets;
+
+        // Function to update available tickets and check if sold out
+        function updateTicketAvailability() {
+            const availableTicketsElement = document.getElementById("available-tickets");
+            availableTicketsElement.textContent = `Available Tickets: ${availableTickets}`;
+            if (availableTickets === 0) {
+                document.getElementById("buy-ticket").disabled = true; // Disable the button when sold out
+            }
+        }
+
+        // Fetch movie data from db.json
+        fetch('db.json')
+            .then(response => response.json())
+            .then(data => {
+                movies = data.films;
+
+                // Get the ul#films element
+                const filmsList = document.getElementById("films");
+
+                // Remove the placeholder li element (if it exists)
+                const placeholderLi = filmsList.querySelector(".placeholder");
+                if (placeholderLi) {
+                    filmsList.removeChild(placeholderLi);
+                }
+
+                // Populate the ul#films with movie details
+                movies.forEach(movie => {
+                    // Create a new li element
+                    const filmItem = document.createElement("li");
+                    filmItem.classList.add("film", "item"); // Add classes to the li element
+
+                    // Set the text content for the li element
+                    filmItem.textContent = movie.title;
+
+                    // Add a click event listener to show movie details when clicked
+                    filmItem.addEventListener("click", function () {
+                        // Set available tickets and update the display
+                        availableTickets = movie.capacity - movie.tickets_sold;
+                        updateTicketAvailability();
+
+                        // Update the HTML elements with movie details
+                        const posterElement = document.getElementById("movie-poster");
+                        const titleElement = document.getElementById("movie-title");
+                        const runtimeElement = document.getElementById("movie-runtime");
+                        const showtimeElement = document.getElementById("movie-showtime");
+                        const descriptionElement = document.getElementById("movie-description");
+
+                        posterElement.src = movie.poster;
+                        titleElement.textContent = movie.title;
+                        runtimeElement.textContent = `${movie.runtime} minutes`;
+                        showtimeElement.textContent = `Showtime: ${movie.showtime}`;
+                        descriptionElement.textContent = movie.description;
+                    });
+
+                    // Append the li element to the ul#films
+                    filmsList.appendChild(filmItem);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching movie data: " + error);
+            });
+
+        // Handle the "Buy Ticket" button click
+        document.getElementById("buy-ticket").addEventListener("click", function () {
+            if (availableTickets > 0) {
+                availableTickets--; // Decrease the number of available tickets
+                updateTicketAvailability();
+                // You can add logic to complete the ticket purchase here if needed
+            }
+        });
+    </script>
+</body>
+</html>
+
